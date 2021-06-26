@@ -14,7 +14,6 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    password: str
     datasetmeta: List[DataSetMeta]
 
     class Config:
