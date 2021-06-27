@@ -3,6 +3,7 @@ from datetime import datetime
 import uuid
 import requests
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import petl as etl
 import dateutil.parser
@@ -83,3 +84,22 @@ def fetch_dataset_to_file(file_location: str):
     for counter, page in enumerate(parse_page(settings.ENTRY_DATA_ENDPOINT)):
         page = list(transform_dataset(page['results']))
         etl.appendcsv((row.values() for row in page), file_location, write_header=True)
+
+
+def get_dataset_filename_by_id(db: Session, dataset_id: int):
+    try:
+        return db.query(models_dataset.DataSetMeta).filter(models_dataset.DataSetMeta.id == dataset_id).first().filename
+    except AttributeError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+
+def fetch_dataset_from_file_limited(file_location: str, load_amount: int):
+    data = etl.fromcsv(source=file_location)
+    return etl.head(data, load_amount)
+
+
+def fetch_dataset_from_file_full(file_location: str):
+    row_number = etl.nrows(etl.fromcsv(source=file_location))
+    return fetch_dataset_from_file_limited(file_location, row_number)
