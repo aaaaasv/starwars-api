@@ -14,5 +14,4 @@ class DataSetMeta(BaseModel):
 
 class DataSetMetaCreate(BaseModel):
     filename: str
-    created_at: datetime.datetime
     user_id: int
