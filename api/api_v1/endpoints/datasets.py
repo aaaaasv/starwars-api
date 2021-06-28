@@ -42,8 +42,13 @@ def fetch_dataset_from_file(dataset_id: int,
                             limit: int = 10,
                             current_user: schemas_user.User = Depends(crud_user.get_current_user),
                             db: Session = Depends(get_db)):
-    filename = crud_dataset.get_dataset_filename_by_id(db, dataset_id=dataset_id)
-    file_location = f'{settings.USER_DATASET_LOCATION}/{current_user.username}/{filename}'
+    try:
+        file_location, owner_id = crud_dataset.get_dataset_info_by_id(db, dataset_id=dataset_id,
+                                                                      username=current_user.username)
+    except AttributeError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
         dataset = crud_dataset.fetch_dataset_from_file_limited(file_location, limit)
         people = crud_dataset.structurize_dataset_table(dataset)
@@ -61,18 +66,20 @@ def fetch_dataset_from_file_count(dataset_id: int,
                                   limit: int = 10,
                                   current_user: schemas_user.User = Depends(crud_user.get_current_user),
                                   db: Session = Depends(get_db)):
-    filename = crud_dataset.get_dataset_filename_by_id(db, dataset_id=dataset_id)
-    file_location = f'{settings.USER_DATASET_LOCATION}/{current_user.username}/{filename}'
+    try:
+        file_location, owner_id = crud_dataset.get_dataset_info_by_id(db, dataset_id=dataset_id,
+                                                                      username=current_user.username)
+    except AttributeError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
         dataset_full = crud_dataset.fetch_dataset_from_file_full(file_location)
-    except FileNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    try:
         dataset_count = crud_dataset.count_dataset_values(dataset_full, *count_by)
         dataset_limited = crud_dataset.limit_dataset(dataset_count, limit)
         people = crud_dataset.structurize_dataset_table(dataset_limited)
     except etl.errors.FieldSelectionError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return {'people': people}

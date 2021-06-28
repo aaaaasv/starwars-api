@@ -88,13 +88,10 @@ def fetch_dataset_to_file(file_location: str):
         etl.appendcsv((row.values() for row in page), file_location, write_header=True)
 
 
-def get_dataset_filename_by_id(db: Session, dataset_id: int):
-    try:
-        return db.query(models_dataset.DataSetMeta).filter(models_dataset.DataSetMeta.id == dataset_id).first().filename
-    except AttributeError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND
-        )
+def get_dataset_info_by_id(db: Session, dataset_id: int, username: str):
+    data = db.query(models_dataset.DataSetMeta).filter(models_dataset.DataSetMeta.id == dataset_id).first()
+    filename, owner_id = data.filename, data.user_id
+    return f'{settings.USER_DATASET_LOCATION}/{username}/{filename}', owner_id
 
 
 def limit_dataset(dataset, limit: int):
