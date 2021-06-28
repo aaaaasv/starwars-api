@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import uuid
-import requests
+import requests_cache
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,6 +11,8 @@ import dateutil.parser
 from models import dataset as models_dataset
 from schemas import dataset as schemas_dataset
 from core import settings
+
+request_session = requests_cache.CachedSession(expire_after=settings.CACHE_TTL)
 
 
 def generate_dataset_metadata(username: str):
@@ -37,7 +39,7 @@ def transform_dataset(dataset: list):
         del person['url'], person['created'], person['vehicles'], person['films'], person['starships'], person[
             'species']
 
-        homeworld_name = requests.get(person['homeworld']).json()['name']
+        homeworld_name = request_session.get(person['homeworld']).json()['name']
 
         date_edited = person.pop('edited')
         person['date'] = dateutil.parser.parse(date_edited).date()
@@ -50,9 +52,8 @@ def transform_dataset(dataset: list):
 
 def parse_page(start_url: str):
     """Get pages from paginated collection."""
-    request_session = requests.Session()
-
     first_page = request_session.get(start_url).json()
+
     yield first_page
     next_url = first_page['next']
 
@@ -81,6 +82,7 @@ def create_csv_file(file_location: str):
 
 def fetch_dataset_to_file(file_location: str):
     """Transform information obtained from the external API and write it page by page to a csv file."""
+
     for counter, page in enumerate(parse_page(settings.ENTRY_DATA_ENDPOINT)):
         page = list(transform_dataset(page['results']))
         etl.appendcsv((row.values() for row in page), file_location, write_header=True)
@@ -105,7 +107,7 @@ def fetch_dataset_from_file_limited(file_location: str, load_amount: int):
 
 
 def fetch_dataset_from_file_full(file_location: str):
-    return etl.fromcsv(file_location)
+    return etl.fromcsv(source=file_location)
 
 
 def count_dataset_values(dataset, *values):

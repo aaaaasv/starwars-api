@@ -7,3 +7,5 @@ ENTRY_DATA_ENDPOINT = 'http://0.0.0.0:8001/api/people/'
 USER_DATASET_LOCATION = 'user_datasets'
 
 API_V1_STR = '/api/v1'
+
+CACHE_TTL = 360
