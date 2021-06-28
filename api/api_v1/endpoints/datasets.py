@@ -30,7 +30,7 @@ def fetch_dataset_to_file(background_tasks: BackgroundTasks,
     return status.HTTP_202_ACCEPTED
 
 
-@router.get('/{dataset_id}')
+@router.get('/{dataset_id}', response_model=schemas_dataset.DataSetCollection)
 def fetch_dataset_from_file(dataset_id: int,
                             limit: int = 10,
                             current_user: schemas_user.User = Depends(crud_user.get_current_user),
@@ -44,10 +44,11 @@ def fetch_dataset_from_file(dataset_id: int,
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return {'data': people}
+    return {'datasets': people}
 
 
-@router.get('/{dataset_id}/value_count')
+@router.get('/{dataset_id}/value_count', response_model=schemas_dataset.DataSetCountedCollection,
+            response_model_exclude_none=True)
 def fetch_dataset_from_file_count(dataset_id: int,
                                   count_by: List[str] = Query(...),
                                   limit: int = 10,
@@ -68,4 +69,4 @@ def fetch_dataset_from_file_count(dataset_id: int,
     except etl.errors.FieldSelectionError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-    return {'data': people}
+    return {'datasets': people}
