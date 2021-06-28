@@ -6,7 +6,7 @@ import petl as etl
 from crud import crud_dataset, crud_user
 from schemas import user as schemas_user
 from schemas import dataset as schemas_dataset
-from api.dependencies import get_db
+from api.dependencies import get_db, check_availability
 from core import settings
 
 router = APIRouter()
@@ -15,7 +15,14 @@ router = APIRouter()
 @router.post('/')
 def fetch_dataset_to_file(background_tasks: BackgroundTasks,
                           db: Session = Depends(get_db),
-                          current_user: schemas_user.User = Depends(crud_user.get_current_user)):
+                          current_user: schemas_user.User = Depends(crud_user.get_current_user),
+                          is_swapi_available: bool = Depends(check_availability)):
+    if not is_swapi_available:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='SWAPI is currently unavailable'
+        )
+
     created_at, file_location = crud_dataset.generate_dataset_metadata(current_user.username)
 
     try:
