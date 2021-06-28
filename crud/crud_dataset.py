@@ -95,11 +95,29 @@ def get_dataset_filename_by_id(db: Session, dataset_id: int):
         )
 
 
+def limit_dataset(dataset, limit: int):
+    return etl.head(dataset, limit)
+
+
 def fetch_dataset_from_file_limited(file_location: str, load_amount: int):
     data = etl.fromcsv(source=file_location)
     return etl.head(data, load_amount)
 
 
 def fetch_dataset_from_file_full(file_location: str):
-    row_number = etl.nrows(etl.fromcsv(source=file_location))
-    return fetch_dataset_from_file_limited(file_location, row_number)
+    return etl.fromcsv(file_location)
+
+
+def count_dataset_values(dataset, *values):
+    return etl.valuecounts(dataset, *values)
+
+
+def structurize_dataset_table(dataset, header):
+    headless_slice = slice(1, None)
+
+    people = []
+
+    for person_row in dataset[headless_slice]:
+        people.append(dict(zip(header, person_row)))
+
+    return people
