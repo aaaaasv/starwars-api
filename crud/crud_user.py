@@ -2,7 +2,7 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-import settings
+from core import settings
 from models import user as models_user
 from schemas import token as schemas_token
 from schemas import user as schemas_user

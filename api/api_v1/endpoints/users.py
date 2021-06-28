@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-import settings
+from core import settings
 from api.dependencies import get_db
 from crud import crud_user, crud_login
 from schemas import user as schemas_user
@@ -25,7 +25,7 @@ def create_user(user: schemas_user.UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post('/token', response_model=schemas_token.Token)
-async def get_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     user = crud_login.authenticate(db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
@@ -49,5 +49,5 @@ async def is_user_authenticated(is_authenticated: bool = Depends(crud_user.is_au
 
 
 @router.get('/me', response_model=schemas_user.User)
-def get_current_user(current_user: schemas_user.User = Depends(crud_user.get_current_user)):
+def get_current_user_datasets(current_user: schemas_user.User = Depends(crud_user.get_current_user)):
     return current_user
