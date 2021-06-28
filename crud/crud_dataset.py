@@ -36,13 +36,17 @@ def transform_dataset(dataset: list):
     """
 
     def apply(person: dict):
-        del person['url'], person['created'], person['vehicles'], person['films'], person['starships'], person[
-            'species']
+        date_edited = person.pop('edited')
+        person['date'] = dateutil.parser.parse(date_edited).date()
+
+        all_keys = person.keys()
+        to_remove = [key for key in all_keys if key not in settings.REQUIRED_DATASET_FIELDS]
+
+        for key in to_remove:
+            del person[key]
 
         homeworld_name = request_session.get(person['homeworld']).json()['name']
 
-        date_edited = person.pop('edited')
-        person['date'] = dateutil.parser.parse(date_edited).date()
         person['homeworld'] = homeworld_name
 
         return person
@@ -74,7 +78,7 @@ def create_base_user_dataset_dir(username):
 def create_csv_file(file_location: str):
     """Create initial csv file with a header."""
     table_header = [
-        ['name', 'height', 'mass', 'hair_color', 'skin_color', 'eye_color', 'birth_year', 'gender', 'homeworld', 'date']
+        settings.REQUIRED_DATASET_FIELDS
     ]
 
     etl.tocsv(table_header, file_location)
@@ -84,7 +88,7 @@ def fetch_dataset_to_file(file_location: str):
     """Transform information obtained from the external API and write it page by page to a csv file."""
 
     for counter, page in enumerate(parse_page(settings.ENTRY_DATA_ENDPOINT)):
-        page = list(transform_dataset(page['results']))
+        page = transform_dataset(page['results'])
         etl.appendcsv((row.values() for row in page), file_location, write_header=True)
 
 
