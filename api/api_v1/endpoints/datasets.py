@@ -30,7 +30,7 @@ def fetch_dataset_to_file(background_tasks: BackgroundTasks,
     return status.HTTP_202_ACCEPTED
 
 
-@router.get('/{dataset_id}', response_model=schemas_dataset.DataSetCollection)
+@router.get('/{dataset_id}', response_model=schemas_dataset.People)
 def fetch_dataset_from_file(dataset_id: int,
                             limit: int = 10,
                             current_user: schemas_user.User = Depends(crud_user.get_current_user),
@@ -39,15 +39,15 @@ def fetch_dataset_from_file(dataset_id: int,
     file_location = f'{settings.USER_DATASET_LOCATION}/{current_user.username}/{filename}'
     try:
         dataset = crud_dataset.fetch_dataset_from_file_limited(file_location, limit)
-        header = dataset[0]
-        people = crud_dataset.structurize_dataset_table(dataset, header)
+        people = crud_dataset.structurize_dataset_table(dataset)
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return {'datasets': people}
+    return {'people': people}
 
 
-@router.get('/{dataset_id}/value_count', response_model=schemas_dataset.DataSetCountedCollection,
+@router.get('/{dataset_id}/value_count',
+            response_model=schemas_dataset.PeopleCounted,
             response_model_exclude_none=True)
 def fetch_dataset_from_file_count(dataset_id: int,
                                   count_by: List[str] = Query(...),
@@ -64,9 +64,8 @@ def fetch_dataset_from_file_count(dataset_id: int,
     try:
         dataset_count = crud_dataset.count_dataset_values(dataset_full, *count_by)
         dataset_limited = crud_dataset.limit_dataset(dataset_count, limit)
-        header = [*count_by, 'count']
-        people = crud_dataset.structurize_dataset_table(dataset_limited, header)
+        people = crud_dataset.structurize_dataset_table(dataset_limited)
     except etl.errors.FieldSelectionError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-    return {'datasets': people}
+    return {'people': people}

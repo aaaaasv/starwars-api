@@ -112,12 +112,10 @@ def count_dataset_values(dataset, *values):
     return etl.valuecounts(dataset, *values)
 
 
-def structurize_dataset_table(dataset, header):
-    headless_slice = slice(1, None)
-
+def structurize_dataset_table(dataset):
     people = []
 
-    for person_row in dataset[headless_slice]:
-        people.append(dict(zip(header, person_row)))
+    for person_row in dataset.dicts():
+        people.append(person_row)
 
     return people

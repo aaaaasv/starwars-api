@@ -18,7 +18,7 @@ class DataSetMetaCreate(BaseModel):
     user_id: int
 
 
-class DataSet(BaseModel):
+class Person(BaseModel):
     name: str
     height: str
     mass: str
@@ -31,11 +31,11 @@ class DataSet(BaseModel):
     date: datetime.date
 
 
-class DataSetCollection(BaseModel):
-    datasets: List[DataSet]
+class People(BaseModel):
+    people: List[Person]
 
 
-class DataSetCounted(BaseModel):
+class PersonCounted(BaseModel):
     name: Optional[str]
     height: Optional[str]
     mass: Optional[str]
@@ -49,5 +49,5 @@ class DataSetCounted(BaseModel):
     count: int
 
 
-class DataSetCountedCollection(BaseModel):
-    datasets: List[DataSetCounted]
+class PeopleCounted(BaseModel):
+    people: List[PersonCounted]
