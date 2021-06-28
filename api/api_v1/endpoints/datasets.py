@@ -22,7 +22,7 @@ def fetch_dataset_to_file(background_tasks: BackgroundTasks,
             detail='SWAPI is currently unavailable'
         )
 
-    created_at, file_location = crud_dataset.generate_dataset_metadata(current_user.username)
+    file_location = crud_dataset.generate_dataset_file_location(current_user.username)
 
     try:
         crud_dataset.create_csv_file(file_location)

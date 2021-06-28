@@ -15,10 +15,10 @@ from core import settings
 request_session = requests_cache.CachedSession(expire_after=settings.CACHE_TTL)
 
 
-def generate_dataset_metadata(username: str):
+def generate_dataset_file_location(username: str):
     filename = f'{uuid.uuid4().hex}.csv'
     file_location = f'{settings.USER_DATASET_LOCATION}/{username}/{filename}'
-    return datetime.now(), file_location
+    return file_location
 
 
 def create_datasetmeta(db: Session, datasetmeta: schemas_dataset.DataSetMetaCreate):
