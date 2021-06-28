@@ -3,11 +3,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status, Query, HTTPExce
 from sqlalchemy.orm import Session
 import petl as etl
 
-from crud import crud_dataset, crud_user
+from crud import crud_dataset
 from schemas import user as schemas_user
 from schemas import dataset as schemas_dataset
-from api.dependencies import get_db, check_availability
-from core import settings
+from api.dependencies import get_db, check_availability, get_current_user
 
 router = APIRouter()
 
@@ -15,7 +14,7 @@ router = APIRouter()
 @router.post('/')
 def fetch_dataset_to_file(background_tasks: BackgroundTasks,
                           db: Session = Depends(get_db),
-                          current_user: schemas_user.User = Depends(crud_user.get_current_user),
+                          current_user: schemas_user.User = Depends(get_current_user),
                           is_swapi_available: bool = Depends(check_availability)):
     if not is_swapi_available:
         raise HTTPException(
@@ -40,7 +39,7 @@ def fetch_dataset_to_file(background_tasks: BackgroundTasks,
 @router.get('/{dataset_id}', response_model=schemas_dataset.People)
 def fetch_dataset_from_file(dataset_id: int,
                             limit: int = 10,
-                            current_user: schemas_user.User = Depends(crud_user.get_current_user),
+                            current_user: schemas_user.User = Depends(get_current_user),
                             db: Session = Depends(get_db)):
     try:
         file_location, owner_id = crud_dataset.get_dataset_info_by_id(db, dataset_id=dataset_id,
@@ -64,7 +63,7 @@ def fetch_dataset_from_file(dataset_id: int,
 def fetch_dataset_from_file_count(dataset_id: int,
                                   count_by: List[str] = Query(...),
                                   limit: int = 10,
-                                  current_user: schemas_user.User = Depends(crud_user.get_current_user),
+                                  current_user: schemas_user.User = Depends(get_current_user),
                                   db: Session = Depends(get_db)):
     try:
         file_location, owner_id = crud_dataset.get_dataset_info_by_id(db, dataset_id=dataset_id,
